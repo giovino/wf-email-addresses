@@ -4,6 +4,7 @@ import sys
 import cgmail
 import logging
 import textwrap
+import json
 
 from whitefacesdk.client import Client
 from whitefacesdk.observable import Observable
@@ -80,8 +81,18 @@ def main():
     sent_count = 0
 
     for result in results:
+        adata = {}
+        data = {}
         if result['body_email_addresses']:
             for email_address in result['body_email_addresses']:
+
+                # add from to adata if exists
+                if 'from' in result['headers']:
+                    adata['from'] = result['headers']['from'][0]
+                # add subject to adata if exists
+                if 'subject' in result['headers']:
+                    adata['subject'] = result['headers']['subject'][0]
+                
                 data = {
                     "user": WHITEFACE_USER,
                     "feed": WHITEFACE_FEED,
@@ -90,6 +101,11 @@ def main():
                     "description": "email addresses parsed out of the message body sourced from unsolicited " \
                                    "commercial email (spam)"
                 }
+
+                # add adata as a comment if populated
+                if adata:
+                    comment = json.dumps(adata)
+                    data['comment'] = comment
 
                 try:
                     ret = Observable(cli, data).submit()
