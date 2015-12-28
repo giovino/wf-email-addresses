@@ -7,7 +7,7 @@ import textwrap
 import json
 
 from whitefacesdk.client import Client
-from whitefacesdk.observable import Observable
+from whitefacesdk.indicator import Indicator
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -96,7 +96,7 @@ def main():
                 data = {
                     "user": WHITEFACE_USER,
                     "feed": WHITEFACE_FEED,
-                    "observable": email_address,
+                    "indicator": email_address,
                     "tags": "uce, email-address",
                     "description": "email addresses parsed out of the message body sourced from unsolicited " \
                                    "commercial email (spam)"
@@ -108,8 +108,8 @@ def main():
                     data['comment'] = comment
 
                 try:
-                    ret = Observable(cli, data).submit()
-                    if ret['observable']['id']:
+                    ret = Indicator(cli, data).submit()
+                    if ret['indicator']['id']:
                         sent_count += 1
                 except Exception as e:
                     raise Exception(e)
