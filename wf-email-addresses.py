@@ -5,6 +5,7 @@ import cgmail
 import logging
 import textwrap
 import json
+import re
 
 from whitefacesdk.client import Client
 from whitefacesdk.indicator import Indicator
@@ -17,14 +18,70 @@ from argparse import RawDescriptionHelpFormatter
 import requests
 requests.packages.urllib3.disable_warnings()
 
-LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s[%(lineno)s] - %(message)s'
-
-logger = logging.getLogger(__name__)
-
 WHITEFACE_USER = ''
 WHITEFACE_TOKEN = ''
 WHITEFACE_FEED = ''
 
+'''
+exclude is a list of strings that you want to sanitize before sending 
+to whiteface. the list of strings in exclude will be applied to:
+ - From Address
+ - Subject
+ - Email address found in the message body
+
+the string specified will be replaed with "<redacted>". 
+'''
+
+# Example: exclude = ['john@example.com', '@test.com']
+exclude = []
+
+LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s[%(lineno)s] - %(message)s'
+logger = logging.getLogger(__name__)
+
+def find_exclusions(email_address):
+    '''
+
+    :param email_address:
+    :return:
+    '''
+
+    # if exclude is populated
+    if exclude:
+        # compile a list of regular expresssions
+        regexes = [ re.compile(p) for p in exclude]
+
+        for regex in regexes:
+            if regex.search(email_address):
+                # if an email address is to be excluded
+                return True
+            else:
+                return False
+    # if exclude is not populated
+    else:
+        return False
+
+
+def sanitize(value):
+    '''
+
+    :param value: a string; it is expected to be a email header value (from, subject)
+
+    :return: a string
+    '''
+
+    # if exclude is populated
+    if exclude:
+        # compile a list of regular expresssions
+        regexes = [ re.compile(p) for p in exclude]
+
+        for regex in regexes:
+            if regex.search(value):
+                value = regex.sub('redacted', value)
+                break
+        return value
+    # if exclude is not populated, return the origional value
+    else:
+        return value
 
 def main():
     """
@@ -86,33 +143,38 @@ def main():
         if result['body_email_addresses']:
             for email_address in result['body_email_addresses']:
 
-                # add from to adata if exists
-                if 'from' in result['headers']:
-                    adata['from'] = result['headers']['from'][0]
-                # add subject to adata if exists
-                if 'subject' in result['headers']:
-                    adata['subject'] = result['headers']['subject'][0]
-                
-                data = {
-                    "user": WHITEFACE_USER,
-                    "feed": WHITEFACE_FEED,
-                    "indicator": email_address,
-                    "tags": "uce, email-address",
-                    "description": "email addresses parsed out of the message body sourced from unsolicited " \
-                                   "commercial email (spam)"
-                }
+                if find_exclusions(email_address):
+                    # skip the indicator as it was found in the excludes list
+                    logger.info("skipping {0} as it was marked for exclusion".format(email_address))
+                    continue
+                else:
+                    # add from to adata if exists
+                    if 'from' in result['headers']:
+                        adata['from'] = sanitize(result['headers']['from'][0])
+                    # add subject to adata if exists
+                    if 'subject' in result['headers']:
+                        adata['subject'] = sanitize(result['headers']['subject'][0])
 
-                # add adata as a comment if populated
-                if adata:
-                    comment = json.dumps(adata)
-                    data['comment'] = comment
+                    data = {
+                        "user": WHITEFACE_USER,
+                        "feed": WHITEFACE_FEED,
+                        "indicator": email_address,
+                        "tags": "uce, email-address",
+                        "description": "email addresses parsed out of the message body sourced from unsolicited " \
+                                       "commercial email (spam)"
+                    }
 
-                try:
-                    ret = Indicator(cli, data).submit()
-                    if ret['indicator']['id']:
-                        sent_count += 1
-                except Exception as e:
-                    raise Exception(e)
+                    # add adata as a comment if populated
+                    if adata:
+                        comment = json.dumps(adata)
+                        data['comment'] = comment
+
+                    try:
+                        ret = Indicator(cli, data).submit()
+                        if ret['indicator']['id']:
+                            sent_count += 1
+                    except Exception as e:
+                        raise Exception(e)
 
     logger.info("sent {0} email addresses to whiteface".format(sent_count))
 
