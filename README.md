@@ -1,23 +1,23 @@
 # wf-email-addresses
-A script to submit email addresses seen in the message body of UCE to whiteface
+A script to submit email addresses seen in the message body of UCE to csirtg.io
 
 ## Requirements
 
 1. [py-cgmail](https://github.com/csirtgadgets/py-cgmail)
-1. [py-whitefacesdk](https://github.com/csirtgadgets/py-whitefacesdk)
+1. [py-csirtgsdk](https://github.com/csirtgadgets/py-csirtgsdk)
 
 ## Goals
 
-1. To demonstrate how to interact with Whiteface using the Whiteface SDK
+1. To demonstrate how to interact with csirtg using the csirtg SDK
 
 ## Requirements
 
-1. A [Whiteface](https://whiteface.csirtgadgets.com) account
-1. A Whiteface account token; within Whiteface:
+1. A [csirtg](https://csirtg.io) account
+1. A csirtg account token; within csirtg:
   1. Select your username
   1. Select "tokens"
   1. Select "Generate Token
-1. A Whiteface feed; within Whiteface
+1. A csirtg feed; within csirtg
   1. Select (the plus sign)
   1. Select Feed
   1. Choose a feed name (e.g. port scanners)
@@ -29,7 +29,7 @@ A script to submit email addresses seen in the message body of UCE to whiteface
 
 1. Create a [virtual environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/#basic-usage) for this
 project.
-1. Install [py-cgmail](https://github.com/csirtgadgets/py-cgmail) and [py-whitefacesdk](https://github.com/csirtgadgets/py-whitefacesdk)
+1. Install [py-cgmail](https://github.com/csirtgadgets/py-cgmail) and [py-csirtgsdk](https://github.com/csirtgadgets/py-csirtgsdk)
 within the virtual environment.
 1. Download the wf-email-addresses.py script
 
@@ -42,7 +42,7 @@ it appropriately.
 
  ```
 # Process spam emails to have the email addresses in the message body submitted
-# to whiteface
+# to csirtg
 :0 c
 * ^X-Spam-Level: \*\*\*\*\*
 | /path/to/venv/bin/python2.7 /path/to/wf-email-addresses.py

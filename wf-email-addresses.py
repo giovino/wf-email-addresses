@@ -7,8 +7,8 @@ import textwrap
 import json
 import re
 
-from whitefacesdk.client import Client
-from whitefacesdk.indicator import Indicator
+from csirtgsdk.client import Client
+from csirtgsdk.indicator import Indicator
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -24,7 +24,7 @@ WHITEFACE_FEED = ''
 
 '''
 exclude is a list of strings that you want to sanitize before sending 
-to whiteface. the list of strings in exclude will be applied to:
+to csirtg.io. the list of strings in exclude will be applied to:
  - From Address
  - Subject
  - Email address found in the message body
@@ -86,7 +86,7 @@ def sanitize(value):
 def main():
     """
     A script to extract email addresses in the body of spam email messages and submit the following to
-    whiteface:
+    csirtg.io:
 
     * From
     * Subject
@@ -176,7 +176,7 @@ def main():
                     except Exception as e:
                         raise Exception(e)
 
-    logger.info("sent {0} email addresses to whiteface".format(sent_count))
+    logger.info("sent {0} email addresses to csirtg.io".format(sent_count))
 
 if __name__ == "__main__":
     main()
